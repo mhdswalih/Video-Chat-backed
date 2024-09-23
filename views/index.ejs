@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Random Video Chat</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      background-color: #121212; /* Dark background */
+      height: 100vh;
+      color: #ffffff; /* White text */
+      transition: background-color 0.3s, color 0.3s; /* Smooth transition */
+      padding: 10px;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+      text-align: center;
+      font-size: 24px;
+    }
+
+    .video-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr; /* Two equal columns */
+      gap: 20px; /* Space between videos */
+      width: 100%;
+      max-width: 1200px; /* Set max width for large screens */
+      margin-bottom: 20px;
+    }
+
+    video {
+      width: 100%;
+      border-radius: 10px;
+      transition: transform 0.3s;
+      aspect-ratio: 16 / 9; /* Maintain aspect ratio */
+    }
+
+    video:hover {
+      transform: scale(1.05);
+    }
+
+    #remoteVideo {
+      border: 2px solid #007bff; /* Blue border for remote video */
+      border-radius: 10px;
+    }
+
+    #localVideo {
+      border: 2px solid #28a745; /* Green border for local video */
+      border-radius: 10px;
+    }
+
+    #status {
+      margin-top: 10px;
+      font-size: 18px;
+      text-align: center;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-top: 20px;
+      gap: 10px;
+    }
+
+    .control-button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.3s;
+    }
+
+    .start-button {
+      background-color: #007bff; /* Blue for start button */
+      color: #fff;
+    }
+
+    .end-button {
+      background-color: #dc3545; /* Red for end button */
+      color: #fff;
+    }
+
+    .toggle-button {
+      color: #fff;
+      margin-bottom: 20px;
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 24px;
+      cursor: pointer;
+    }
+
+    input {
+      width: 80%;
+      max-width: 800px;
+      height: 50px;
+      font-size: larger;
+      border-radius: 10px;
+      padding: 0 10px;
+      border: 1px solid #ccc;
+    }
+
+    /* Light Mode Styles */
+    body.light {
+      background-color: #ffffff; /* Light background */
+      color: #000000; /* Black text */
+    }
+
+    body.light #remoteVideo {
+      border: 2px solid #007bff;
+    }
+
+    body.light #localVideo {
+      border: 2px solid #28a745;
+    }
+
+    /* Responsive Styles */
+    @media (max-width: 768px) {
+      .video-container {
+        grid-template-columns: 1fr; /* Stack videos on small screens */
+      }
+
+      .controls {
+        flex-direction: column; /* Stack buttons on small screens */
+        gap: 15px;
+      }
+
+      input {
+        width: 90%;
+      }
+    }
+
+    @media (max-width: 480px) {
+      video {
+        aspect-ratio: 4 / 3; /* Change aspect ratio on small screens */
+      }
+
+      input {
+        width: 100%;
+      }
+
+      h1 {
+        font-size: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <h1>DevChat</h1>
+    <button class="toggle-button" id="toggleTheme"><i class="fas fa-adjust"></i></button>
+  </nav>
+
+  <h1>Find Your Buddy!</h1>
+
+  <div class="video-container">
+    <video id="localVideo" autoplay muted></video>
+    <video id="remoteVideo" autoplay ></video>
+  </div>
+
+  <div id="status">Waiting for a partner...</div>
+
+  <div class="controls">
+    <button class="control-button start-button" id="startCall"><i class=""></i> Skip</button>
+    <input type="text" placeholder="Let’s cook something..."/>
+    <button class="control-button end-button" id="endCall"><i class=""></i> End</button>
+  </div>
+
+  <script>
+    // Dark and Light Mode Toggle
+    const toggleButton = document.getElementById('toggleTheme');
+    toggleButton.addEventListener('click', () => {
+      document.body.classList.toggle('light');
+    });
+  </script>
+
+  <script src="/js/script.js"></script>
+</body>
+</html>

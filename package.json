@@ -1,0 +1,21 @@
+{
+  "dependencies": {
+    "ejs": "^3.1.10",
+    "express": "^4.21.0",
+    "express-session": "^1.18.0",
+    "nodemon": "^3.1.7",
+    "path": "^0.12.7",
+    "socket.io": "^4.8.0",
+    "ws": "^8.18.0"
+  },
+  "scripts": {
+    "start": "nodemon server.js"
+  },
+  "name": "video-call-application",
+  "version": "1.0.0",
+  "main": "server.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}
