@@ -14,37 +14,38 @@ const socket = new WebSocket('wss://video-chat-bpgv.onrender.com');
 // Handle incoming WebSocket messages
 socket.onmessage = async ({ data }) => {
   if (data instanceof Blob) {
-   
+    // Convert the Blob to text before parsing
     data = await data.text();
   }
-    try {
-        const message = JSON.parse(data);
-        console.log('Parsed message:', message);
 
-        // Handle the different message types
-        if (message.type === 'partner-found') {
-            statusDiv.textContent = 'Partner found! Starting video chat...';
-            const offer = await peerConnection.createOffer();
-            await peerConnection.setLocalDescription(offer);
-            socket.send(JSON.stringify({ type: 'offer', offer }));
-        } else if (message.type === 'offer') {
-            await peerConnection.setRemoteDescription(new RTCSessionDescription(message.offer));
-            const answer = await peerConnection.createAnswer();
-            await peerConnection.setLocalDescription(answer);
-            socket.send(JSON.stringify({ type: 'answer', answer }));
-        } else if (message.type === 'answer') {
-            await peerConnection.setRemoteDescription(new RTCSessionDescription(message.answer));
-        } else if (message.type === 'candidate') {
-            await peerConnection.addIceCandidate(new RTCIceCandidate(message.candidate));
-            console.log('Received ICE candidate:', message.candidate);
-        } else if (message.type === 'partner-disconnected') {
-            statusDiv.textContent = 'Partner disconnected. Waiting for a new partner...';
-            remoteVideo.srcObject = null; 
-        }
-    } catch (error) {
-        console.error('Failed to parse message:', error);
+  try {
+    const message = JSON.parse(data);
+    console.log('Parsed message:', message);
+
+    // Handle the different message types
+    if (message.type === 'partner-found') {
+      statusDiv.textContent = 'Partner found! Starting video chat...';
+      const offer = await peerConnection.createOffer();
+      await peerConnection.setLocalDescription(offer);
+      socket.send(JSON.stringify({ type: 'offer', offer }));
+    } else if (message.type === 'offer') {
+      await peerConnection.setRemoteDescription(new RTCSessionDescription(message.offer));
+      const answer = await peerConnection.createAnswer();
+      await peerConnection.setLocalDescription(answer);
+      socket.send(JSON.stringify({ type: 'answer', answer }));
+    } else if (message.type === 'answer') {
+      await peerConnection.setRemoteDescription(new RTCSessionDescription(message.answer));
+    } else if (message.type === 'candidate') {
+      await peerConnection.addIceCandidate(new RTCIceCandidate(message.candidate));
+    } else if (message.type === 'partner-disconnected') {
+      statusDiv.textContent = 'Partner disconnected. Waiting for a new partner...';
+      remoteVideo.srcObject = null; 
     }
+  } catch (error) {
+    console.error('Failed to parse message:', error);
+  }
 };
+
 
 // Get local media (camera and microphone)
 navigator.mediaDevices.getUserMedia({ video: true, audio: true })
