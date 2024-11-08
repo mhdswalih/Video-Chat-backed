@@ -26,7 +26,6 @@ const handleConnection = (ws) => {
 
         ws.partner = partner;
         partner.partner = ws;
-
         ws.send(JSON.stringify({ type: 'partner-found' }));
         partner.send(JSON.stringify({ type: 'partner-found' }));
     } else {

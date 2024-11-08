@@ -17,7 +17,7 @@ app.get('/home',WebSocketController.loadIndexPage);
 
 
 const server = app.listen(3500, () => {
-    console.log('Server is running on http://localhost:3500');
+    console.log('Server is running on https://video-chat-bpgv.onrender.com');
 });
 
 const wss = new WebSocket.Server({ server });

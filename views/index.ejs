@@ -150,70 +150,70 @@
     <input type="text" placeholder="Let’s cook something..."/>
     <button class="control-button end-button" id="endCall">End</button>
   </div>
-  <script>
-    const toggleButton = document.getElementById('toggleTheme');
-    toggleButton.addEventListener('click', () => {
-      document.body.classList.toggle('light');
-    });
+  <script src="/js/script.js">
+    // const toggleButton = document.getElementById('toggleTheme');
+    // toggleButton.addEventListener('click', () => {
+    //   document.body.classList.toggle('light');
+    // });
 
-    const localVideo = document.getElementById('localVideo');
-    const remoteVideo = document.getElementById('remoteVideo');
-    const statusDiv = document.getElementById('status');
+    // const localVideo = document.getElementById('localVideo');
+    // const remoteVideo = document.getElementById('remoteVideo');
+    // const statusDiv = document.getElementById('status');
 
-    const peerConnection = new RTCPeerConnection({
-      iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
-    });
+    // const peerConnection = new RTCPeerConnection({
+    //   iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+    // });
 
-    const socket = new WebSocket('ws://localhost:3500');
+    // const socket = new WebSocket('ws://localhost:3500');
 
-    socket.onmessage = async ({ data }) => {
-      const message = JSON.parse(data);
-      if (message.type === 'partner-found') {
-        statusDiv.textContent = 'Partner found! Starting video chat...';
-        const offer = await peerConnection.createOffer();
-        await peerConnection.setLocalDescription(offer);
-        socket.send(JSON.stringify({ type: 'offer', offer }));
-      } else if (message.type === 'offer') {
-        await peerConnection.setRemoteDescription(new RTCSessionDescription(message.offer));
-        const answer = await peerConnection.createAnswer();
-        await peerConnection.setLocalDescription(answer);
-        socket.send(JSON.stringify({ type: 'answer', answer }));
-      } else if (message.type === 'answer') {
-        await peerConnection.setRemoteDescription(new RTCSessionDescription(message.answer));
-      } else if (message.type === 'candidate') {
-        await peerConnection.addIceCandidate(new RTCIceCandidate(message.candidate));
-      } else if (message.type === 'partner-disconnected') {
-        statusDiv.textContent = 'Partner disconnected. Waiting for a new partner...';
-        remoteVideo.srcObject = null;
-      }
-    };
+    // socket.onmessage = async ({ data }) => {
+    //   const message = JSON.parse(data);
+    //   if (message.type === 'partner-found') {
+    //     statusDiv.textContent = 'Partner found! Starting video chat...';
+    //     const offer = await peerConnection.createOffer();
+    //     await peerConnection.setLocalDescription(offer);
+    //     socket.send(JSON.stringify({ type: 'offer', offer }));
+    //   } else if (message.type === 'offer') {
+    //     await peerConnection.setRemoteDescription(new RTCSessionDescription(message.offer));
+    //     const answer = await peerConnection.createAnswer();
+    //     await peerConnection.setLocalDescription(answer);
+    //     socket.send(JSON.stringify({ type: 'answer', answer }));
+    //   } else if (message.type === 'answer') {
+    //     await peerConnection.setRemoteDescription(new RTCSessionDescription(message.answer));
+    //   } else if (message.type === 'candidate') {
+    //     await peerConnection.addIceCandidate(new RTCIceCandidate(message.candidate));
+    //   } else if (message.type === 'partner-disconnected') {
+    //     statusDiv.textContent = 'Partner disconnected. Waiting for a new partner...';
+    //     remoteVideo.srcObject = null;
+    //   }
+    // };
 
-    navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-      .then(stream => {
-        localVideo.srcObject = stream;
-        stream.getTracks().forEach(track => peerConnection.addTrack(track, stream));
-      })
-      .catch(error => {
-        alert('Please allow access to camera and microphone.');
-      });
+    // navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+    //   .then(stream => {
+    //     localVideo.srcObject = stream;
+    //     stream.getTracks().forEach(track => peerConnection.addTrack(track, stream));
+    //   })
+    //   .catch(error => {
+    //     alert('Please allow access to camera and microphone.');
+    //   });
 
-    peerConnection.onicecandidate = (event) => {
-      if (event.candidate) {
-        socket.send(JSON.stringify({ type: 'candidate', candidate: event.candidate }));
-      }
-    };
+    // peerConnection.onicecandidate = (event) => {
+    //   if (event.candidate) {
+    //     socket.send(JSON.stringify({ type: 'candidate', candidate: event.candidate }));
+    //   }
+    // };
 
-    peerConnection.ontrack = (event) => {
-      const remoteStream = event.streams[0];
-      remoteVideo.srcObject = remoteStream;
-    };
+    // peerConnection.ontrack = (event) => {
+    //   const remoteStream = event.streams[0];
+    //   remoteVideo.srcObject = remoteStream;
+    // };
 
-    document.getElementById('endCall').addEventListener('click', () => {
-      socket.close();
-      peerConnection.close();
-      remoteVideo.srcObject = null;
-      statusDiv.textContent = 'Call ended. Waiting for a new partner...';
-    });
+    // document.getElementById('endCall').addEventListener('click', () => {
+    //   socket.close();
+    //   peerConnection.close();
+    //   remoteVideo.srcObject = null;
+    //   statusDiv.textContent = 'Call ended. Waiting for a new partner...';
+    // });
   </script>
 </body>
 </html>
