@@ -6,74 +6,152 @@
   <title>Random Video Chat</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
-    /* Styles */
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
-    body { display: flex; flex-direction: column; align-items: center; background-color: #121212; height: 100vh; color: #fff; }
-    h1 { margin: 20px 0; font-size: 24px; text-align: center; }
-    .video-container { display: flex; gap: 20px; margin-bottom: 20px; }
-    video { width: 100%; max-width: 600px; border: 2px solid #007bff; border-radius: 10px; }
-    .controls { display: flex; gap: 10px; }
-    .control-button { padding: 10px 20px; font-size: 16px; border: none; border-radius: 5px; cursor: pointer; }
-    .start-button { background-color: #007bff; color: #fff; }
-    .end-button { background-color: #dc3545; color: #fff; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      background-color: #121212;
+      height: 100vh;
+      color: #ffffff;
+      transition: background-color 0.3s, color 0.3s;
+      padding: 10px;
+    }
+    h1 {
+      margin-bottom: 20px;
+      text-align: center;
+      font-size: 24px;
+    }
+    .video-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      width: 100%;
+      max-width: 1200px;
+      margin-bottom: 20px;
+    }
+    video {
+      width: 100%;
+      border-radius: 10px;
+      transition: transform 0.3s;
+      aspect-ratio: 16 / 9;
+    }
+    video:hover {
+      transform: scale(1.05);
+    }
+    #remoteVideo {
+      border: 2px solid #007bff;
+    }
+    #localVideo {
+      border: 2px solid #28a745;
+    }
+    #status {
+      margin-top: 10px;
+      font-size: 18px;
+      text-align: center;
+    }
+    .controls {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-top: 20px;
+      gap: 10px;
+    }
+    .control-button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.3s;
+    }
+    .start-button {
+      background-color: #007bff;
+      color: #fff;
+    }
+    .end-button {
+      background-color: #dc3545;
+      color: #fff;
+    }
+    .toggle-button {
+      color: #fff;
+      margin-bottom: 20px;
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 24px;
+      cursor: pointer;
+    }
+    input {
+      width: 80%;
+      max-width: 800px;
+      height: 50px;
+      font-size: larger;
+      border-radius: 10px;
+      padding: 0 10px;
+      border: 1px solid #ccc;
+    }
+    /* Light Mode Styles */
+    body.light {
+      background-color: #ffffff;
+      color: #000000;
+    }
+    body.light #remoteVideo {
+      border: 2px solid #007bff;
+    }
+    body.light #localVideo {
+      border: 2px solid #28a745;
+    }
+    /* Responsive Styles */
+    @media (max-width: 768px) {
+      .video-container {
+        grid-template-columns: 1fr;
+      }
+      .controls {
+        flex-direction: column;
+        gap: 15px;
+      }
+      input {
+        width: 90%;
+      }
+    }
+    @media (max-width: 480px) {
+      video {
+        aspect-ratio: 4 / 3;
+      }
+      input {
+        width: 100%;
+      }
+      h1 {
+        font-size: 20px;
+      }
+    }
   </style>
 </head>
 <body>
-  <h1>Random Video Chat</h1>
+  <nav>
+    <h1>DevChat</h1>
+    <button class="toggle-button" id="toggleTheme"><i class="fas fa-adjust"></i></button>
+  </nav>
+  <h1>Find Your Buddy!</h1>
   <div class="video-container">
     <video id="localVideo" autoplay muted></video>
     <video id="remoteVideo" autoplay></video>
   </div>
+  <div id="status">Waiting for a partner...</div>
   <div class="controls">
-    <button class="control-button start-button" id="startCall">Start Call</button>
-    <button class="control-button end-button" id="endCall">End Call</button>
+    <button class="control-button start-button" id="startCall">Skip</button>
+    <input type="text" placeholder="Let’s cook something..."/>
+    <button class="control-button end-button" id="endCall">End</button>
   </div>
-
-  <script>
-    const servers = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] }; // STUN server
-    const pc = new RTCPeerConnection(servers);
-    let localStream = null;
-
-    // Start the video call
-    async function startCall() {
-      // Get local media stream
-      localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-      document.getElementById("localVideo").srcObject = localStream;
-
-      // Add local stream tracks to the peer connection
-      localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
-
-      // When a remote track is received, display it in the remote video element
-      pc.ontrack = event => {
-        document.getElementById("remoteVideo").srcObject = event.streams[0];
-      };
-
-      // Log new ICE candidates (in a real application, send to remote peer)
-      pc.onicecandidate = event => {
-        if (event.candidate) {
-          console.log("New ICE candidate: ", event.candidate);
-        }
-      };
-
-      // Create and set the offer
-      const offer = await pc.createOffer();
-      await pc.setLocalDescription(offer);
-
-      // Set remote description with offer (loopback for testing on the same device)
-      pc.setRemoteDescription(offer);
-    }
-
-    // End the video call
-    function endCall() {
-      pc.close();
-      document.getElementById("localVideo").srcObject = null;
-      document.getElementById("remoteVideo").srcObject = null;
-      location.reload(); // Reset the page for a fresh start
-    }
-
-    // Button event listeners
-    document.getElementById("startCall").onclick = startCall;
-    document.getElementById("endCall").onclick = endCall;
+  <script src="/js/script.js">
+   
   </script>
 </body>
 </html>
