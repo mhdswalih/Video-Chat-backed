@@ -39,7 +39,13 @@ socket.onmessage = async (event) => {
         console.warn('Peer connection not in correct state for setting answer.');
       }
     } else if (message.type === 'candidate') {
-      await peerConnection.addIceCandidate(new RTCIceCandidate(message.candidate));
+      // Check if remote description is set before adding ICE candidate
+      if (peerConnection.remoteDescription) {
+        await peerConnection.addIceCandidate(new RTCIceCandidate(message.candidate));
+        console.log('Added ICE candidate:', message.candidate);
+      } else {
+        console.warn('Remote description not set. Cannot add ICE candidate.');
+      }
     } else if (message.type === 'partner-disconnected') {
       statusDiv.textContent = 'Partner disconnected. Waiting for a new partner...';
       remoteVideo.srcObject = null; 
