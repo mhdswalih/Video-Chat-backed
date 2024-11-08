@@ -13,7 +13,10 @@ const socket = new WebSocket('wss://video-chat-bpgv.onrender.com');
 
 // Handle incoming WebSocket messages
 socket.onmessage = async ({ data }) => {
-    console.log('Received data:', data);
+  if (data instanceof Blob) {
+   
+    data = await data.text();
+  }
     try {
         const message = JSON.parse(data);
         console.log('Parsed message:', message);
