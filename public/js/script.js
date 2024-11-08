@@ -33,6 +33,7 @@ socket.onmessage = async ({ data }) => {
             await peerConnection.setRemoteDescription(new RTCSessionDescription(message.answer));
         } else if (message.type === 'candidate') {
             await peerConnection.addIceCandidate(new RTCIceCandidate(message.candidate));
+            console.log('Received ICE candidate:', message.candidate);
         } else if (message.type === 'partner-disconnected') {
             statusDiv.textContent = 'Partner disconnected. Waiting for a new partner...';
             remoteVideo.srcObject = null; 
@@ -50,6 +51,7 @@ navigator.mediaDevices.getUserMedia({ video: true, audio: true })
 
     // Add local tracks (video/audio) to peer connection
     stream.getTracks().forEach(track => peerConnection.addTrack(track, stream));
+    console.log(`Added track: ${track.kind}`);
   })
   .catch(error => {
     console.error('Error accessing media devices:', error);
