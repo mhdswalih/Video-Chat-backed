@@ -2,13 +2,20 @@ const UserModel = require('../models/userModel');
 
 const Loadhomepage = (req, res) => {
     try {
-        res.render('index'); // Render the video chat page
+        res.render('index'); 
     } catch (error) {
         console.log(error);
         res.status(500).send('Internal Server Error'); 
     }
 };
 
+const loadIndexPage = async (req,res) =>{
+    try {
+        res.render('vid')
+    } catch (error) {
+        console.log(error)
+    }       
+}
 const handleConnection = (ws) => {
     console.log('New client connected');
     const waitingUser = UserModel.getWaitingUser();
@@ -44,7 +51,19 @@ const handleConnection = (ws) => {
     });
 };
 
+//leaodfronPage
+const LoaddevChat = async (req,res)=>{
+    try {
+        res.render('devChat')
+    } catch (error) {
+        console.log(error);
+        
+    }
+}
+ 
 module.exports = {
     Loadhomepage,
     handleConnection,
+    loadIndexPage,
+    LoaddevChat,
 };

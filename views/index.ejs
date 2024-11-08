@@ -12,61 +12,50 @@
       padding: 0;
       font-family: Arial, sans-serif;
     }
-
     body {
       display: flex;
       justify-content: center;
       align-items: center;
       flex-direction: column;
-      background-color: #121212; /* Dark background */
+      background-color: #121212;
       height: 100vh;
-      color: #ffffff; /* White text */
-      transition: background-color 0.3s, color 0.3s; /* Smooth transition */
+      color: #ffffff;
+      transition: background-color 0.3s, color 0.3s;
       padding: 10px;
     }
-
     h1 {
       margin-bottom: 20px;
       text-align: center;
       font-size: 24px;
     }
-
     .video-container {
       display: grid;
-      grid-template-columns: 1fr 1fr; /* Two equal columns */
-      gap: 20px; /* Space between videos */
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
       width: 100%;
-      max-width: 1200px; /* Set max width for large screens */
+      max-width: 1200px;
       margin-bottom: 20px;
     }
-
     video {
       width: 100%;
       border-radius: 10px;
       transition: transform 0.3s;
-      aspect-ratio: 16 / 9; /* Maintain aspect ratio */
+      aspect-ratio: 16 / 9;
     }
-
     video:hover {
       transform: scale(1.05);
     }
-
     #remoteVideo {
-      border: 2px solid #007bff; /* Blue border for remote video */
-      border-radius: 10px;
+      border: 2px solid #007bff;
     }
-
     #localVideo {
-      border: 2px solid #28a745; /* Green border for local video */
-      border-radius: 10px;
+      border: 2px solid #28a745;
     }
-
     #status {
       margin-top: 10px;
       font-size: 18px;
       text-align: center;
     }
-
     .controls {
       display: flex;
       justify-content: center;
@@ -74,7 +63,6 @@
       margin-top: 20px;
       gap: 10px;
     }
-
     .control-button {
       padding: 10px 20px;
       border: none;
@@ -83,17 +71,14 @@
       font-size: 16px;
       transition: background-color 0.3s;
     }
-
     .start-button {
-      background-color: #007bff; /* Blue for start button */
+      background-color: #007bff;
       color: #fff;
     }
-
     .end-button {
-      background-color: #dc3545; /* Red for end button */
+      background-color: #dc3545;
       color: #fff;
     }
-
     .toggle-button {
       color: #fff;
       margin-bottom: 20px;
@@ -103,7 +88,6 @@
       font-size: 24px;
       cursor: pointer;
     }
-
     input {
       width: 80%;
       max-width: 800px;
@@ -113,46 +97,37 @@
       padding: 0 10px;
       border: 1px solid #ccc;
     }
-
     /* Light Mode Styles */
     body.light {
-      background-color: #ffffff; /* Light background */
-      color: #000000; /* Black text */
+      background-color: #ffffff;
+      color: #000000;
     }
-
     body.light #remoteVideo {
       border: 2px solid #007bff;
     }
-
     body.light #localVideo {
       border: 2px solid #28a745;
     }
-
     /* Responsive Styles */
     @media (max-width: 768px) {
       .video-container {
-        grid-template-columns: 1fr; /* Stack videos on small screens */
+        grid-template-columns: 1fr;
       }
-
       .controls {
-        flex-direction: column; /* Stack buttons on small screens */
+        flex-direction: column;
         gap: 15px;
       }
-
       input {
         width: 90%;
       }
     }
-
     @media (max-width: 480px) {
       video {
-        aspect-ratio: 4 / 3; /* Change aspect ratio on small screens */
+        aspect-ratio: 4 / 3;
       }
-
       input {
         width: 100%;
       }
-
       h1 {
         font-size: 20px;
       }
@@ -164,30 +139,81 @@
     <h1>DevChat</h1>
     <button class="toggle-button" id="toggleTheme"><i class="fas fa-adjust"></i></button>
   </nav>
-
   <h1>Find Your Buddy!</h1>
-
   <div class="video-container">
     <video id="localVideo" autoplay muted></video>
-    <video id="remoteVideo" autoplay ></video>
+    <video id="remoteVideo" autoplay></video>
   </div>
-
   <div id="status">Waiting for a partner...</div>
-
   <div class="controls">
-    <button class="control-button start-button" id="startCall"><i class=""></i> Skip</button>
+    <button class="control-button start-button" id="startCall">Skip</button>
     <input type="text" placeholder="Let’s cook something..."/>
-    <button class="control-button end-button" id="endCall"><i class=""></i> End</button>
+    <button class="control-button end-button" id="endCall">End</button>
   </div>
-
   <script>
-    // Dark and Light Mode Toggle
     const toggleButton = document.getElementById('toggleTheme');
     toggleButton.addEventListener('click', () => {
       document.body.classList.toggle('light');
     });
-  </script>
 
-  <script src="/js/script.js"></script>
+    const localVideo = document.getElementById('localVideo');
+    const remoteVideo = document.getElementById('remoteVideo');
+    const statusDiv = document.getElementById('status');
+
+    const peerConnection = new RTCPeerConnection({
+      iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+    });
+
+    const socket = new WebSocket('ws://localhost:3500');
+
+    socket.onmessage = async ({ data }) => {
+      const message = JSON.parse(data);
+      if (message.type === 'partner-found') {
+        statusDiv.textContent = 'Partner found! Starting video chat...';
+        const offer = await peerConnection.createOffer();
+        await peerConnection.setLocalDescription(offer);
+        socket.send(JSON.stringify({ type: 'offer', offer }));
+      } else if (message.type === 'offer') {
+        await peerConnection.setRemoteDescription(new RTCSessionDescription(message.offer));
+        const answer = await peerConnection.createAnswer();
+        await peerConnection.setLocalDescription(answer);
+        socket.send(JSON.stringify({ type: 'answer', answer }));
+      } else if (message.type === 'answer') {
+        await peerConnection.setRemoteDescription(new RTCSessionDescription(message.answer));
+      } else if (message.type === 'candidate') {
+        await peerConnection.addIceCandidate(new RTCIceCandidate(message.candidate));
+      } else if (message.type === 'partner-disconnected') {
+        statusDiv.textContent = 'Partner disconnected. Waiting for a new partner...';
+        remoteVideo.srcObject = null;
+      }
+    };
+
+    navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+      .then(stream => {
+        localVideo.srcObject = stream;
+        stream.getTracks().forEach(track => peerConnection.addTrack(track, stream));
+      })
+      .catch(error => {
+        alert('Please allow access to camera and microphone.');
+      });
+
+    peerConnection.onicecandidate = (event) => {
+      if (event.candidate) {
+        socket.send(JSON.stringify({ type: 'candidate', candidate: event.candidate }));
+      }
+    };
+
+    peerConnection.ontrack = (event) => {
+      const remoteStream = event.streams[0];
+      remoteVideo.srcObject = remoteStream;
+    };
+
+    document.getElementById('endCall').addEventListener('click', () => {
+      socket.close();
+      peerConnection.close();
+      remoteVideo.srcObject = null;
+      statusDiv.textContent = 'Call ended. Waiting for a new partner...';
+    });
+  </script>
 </body>
 </html>
