@@ -15,28 +15,34 @@ const socket = new WebSocket('wss://video-chat-bpgv.onrender.com');
 socket.onmessage = async (event) => {
   let data = event.data;
 
-  // Check if the data is a Blob, and convert it to text if needed
   if (data instanceof Blob) {
-    data = await data.text(); // Convert Blob to a string
+    data = await data.text();
   }
 
   try {
-    const message = JSON.parse(data); // Parse the string to JSON
+    const message = JSON.parse(data);
     console.log('Parsed message:', message);
 
-    // Handle the different message types
     if (message.type === 'partner-found') {
       statusDiv.textContent = 'Partner found! Starting video chat...';
       const offer = await peerConnection.createOffer();
       await peerConnection.setLocalDescription(offer);
       socket.send(JSON.stringify({ type: 'offer', offer }));
     } else if (message.type === 'offer') {
-      await peerConnection.setRemoteDescription(new RTCSessionDescription(message.offer));
-      const answer = await peerConnection.createAnswer();
-      await peerConnection.setLocalDescription(answer);
-      socket.send(JSON.stringify({ type: 'answer', answer }));
+      if (peerConnection.signalingState === 'stable') { // Check if we are in a stable state
+        await peerConnection.setRemoteDescription(new RTCSessionDescription(message.offer));
+        const answer = await peerConnection.createAnswer();
+        await peerConnection.setLocalDescription(answer);
+        socket.send(JSON.stringify({ type: 'answer', answer }));
+      } else {
+        console.warn('Peer connection not in stable state. Ignoring offer.');
+      }
     } else if (message.type === 'answer') {
-      await peerConnection.setRemoteDescription(new RTCSessionDescription(message.answer));
+      if (peerConnection.signalingState === 'have-local-offer') { // Check for correct state
+        await peerConnection.setRemoteDescription(new RTCSessionDescription(message.answer));
+      } else {
+        console.warn('Peer connection not in correct state for setting answer.');
+      }
     } else if (message.type === 'candidate') {
       await peerConnection.addIceCandidate(new RTCIceCandidate(message.candidate));
     } else if (message.type === 'partner-disconnected') {
@@ -47,6 +53,7 @@ socket.onmessage = async (event) => {
     console.error('Failed to parse message:', error);
   }
 };
+
 
 
 
