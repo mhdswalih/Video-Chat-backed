@@ -9,7 +9,7 @@ const peerConnection = new RTCPeerConnection({
 });
 
 // WebSocket connection for signaling
-const socket = new WebSocket('ws://video-chat-bpgv.onrender.com');
+const socket = new WebSocket('wss://video-chat-bpgv.onrender.com');
 
 // Handle incoming WebSocket messages
 socket.onmessage = async ({ data }) => {
