@@ -150,70 +150,76 @@
     <input type="text" placeholder="Let’s cook something..."/>
     <button class="control-button end-button" id="endCall">End</button>
   </div>
-  <script src="/js/script.js">
-    // const toggleButton = document.getElementById('toggleTheme');
-    // toggleButton.addEventListener('click', () => {
-    //   document.body.classList.toggle('light');
-    // });
 
-    // const localVideo = document.getElementById('localVideo');
-    // const remoteVideo = document.getElementById('remoteVideo');
-    // const statusDiv = document.getElementById('status');
+  <script type="module">
+    import firebase from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
+    import { getFirestore, doc, collection, addDoc, onSnapshot, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js";
 
-    // const peerConnection = new RTCPeerConnection({
-    //   iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
-    // });
+    const firebaseConfig = {
+      // Your config
+    };
 
-    // const socket = new WebSocket('ws://localhost:3500');
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-    // socket.onmessage = async ({ data }) => {
-    //   const message = JSON.parse(data);
-    //   if (message.type === 'partner-found') {
-    //     statusDiv.textContent = 'Partner found! Starting video chat...';
-    //     const offer = await peerConnection.createOffer();
-    //     await peerConnection.setLocalDescription(offer);
-    //     socket.send(JSON.stringify({ type: 'offer', offer }));
-    //   } else if (message.type === 'offer') {
-    //     await peerConnection.setRemoteDescription(new RTCSessionDescription(message.offer));
-    //     const answer = await peerConnection.createAnswer();
-    //     await peerConnection.setLocalDescription(answer);
-    //     socket.send(JSON.stringify({ type: 'answer', answer }));
-    //   } else if (message.type === 'answer') {
-    //     await peerConnection.setRemoteDescription(new RTCSessionDescription(message.answer));
-    //   } else if (message.type === 'candidate') {
-    //     await peerConnection.addIceCandidate(new RTCIceCandidate(message.candidate));
-    //   } else if (message.type === 'partner-disconnected') {
-    //     statusDiv.textContent = 'Partner disconnected. Waiting for a new partner...';
-    //     remoteVideo.srcObject = null;
-    //   }
-    // };
+    const servers = {
+      iceServers: [
+        { urls: ["stun:stun1.l.google.com:19302", "stun:stun2.l.google.com:19302"] }
+      ],
+      iceCandidatePoolSize: 10,
+    };
 
-    // navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-    //   .then(stream => {
-    //     localVideo.srcObject = stream;
-    //     stream.getTracks().forEach(track => peerConnection.addTrack(track, stream));
-    //   })
-    //   .catch(error => {
-    //     alert('Please allow access to camera and microphone.');
-    //   });
+    const pc = new RTCPeerConnection(servers);
+    let localStream = null;
+    let remoteStream = new MediaStream();
 
-    // peerConnection.onicecandidate = (event) => {
-    //   if (event.candidate) {
-    //     socket.send(JSON.stringify({ type: 'candidate', candidate: event.candidate }));
-    //   }
-    // };
+    document.getElementById("startCall").onclick = async () => {
+      localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+      document.getElementById("localVideo").srcObject = localStream;
+      document.getElementById("remoteVideo").srcObject = remoteStream;
 
-    // peerConnection.ontrack = (event) => {
-    //   const remoteStream = event.streams[0];
-    //   remoteVideo.srcObject = remoteStream;
-    // };
+      pc.ontrack = (event) => {
+        event.streams[0].getTracks().forEach(track => remoteStream.addTrack(track));
+      };
 
-    // document.getElementById('endCall').addEventListener('click', () => {
-    //   socket.close();
-    //   peerConnection.close();
-    //   remoteVideo.srcObject = null;
-    //   statusDiv.textContent = 'Call ended. Waiting for a new partner...';
-    // });
+      const callDoc = doc(collection(db, "calls"));
+      const offerCandidates = collection(callDoc, "offerCandidates");
+      const answerCandidates = collection(callDoc, "answerCandidates");
+      const callId = callDoc.id;
+      document.getElementById("callInput").value = callId;
+
+      pc.onicecandidate = (event) => {
+        event.candidate && addDoc(offerCandidates, event.candidate.toJSON());
+      };
+
+      const offerDescription = await pc.createOffer();
+      await pc.setLocalDescription(offerDescription);
+
+      await setDoc(callDoc, { offer: { type: offerDescription.type, sdp: offerDescription.sdp } });
+
+      onSnapshot(callDoc, (snapshot) => {
+        const data = snapshot.data();
+        if (!pc.currentRemoteDescription && data?.answer) {
+          const answerDescription = new RTCSessionDescription(data.answer);
+          pc.setRemoteDescription(answerDescription);
+        }
+      });
+
+      onSnapshot(answerCandidates, (snapshot) => {
+        snapshot.docChanges().forEach((change) => {
+          if (change.type === "added") {
+            const candidate = new RTCIceCandidate(change.doc.data());
+            pc.addIceCandidate(candidate);
+          }
+        });
+      });
+    };
+
+    document.getElementById("endCall").onclick = () => {
+      pc.close();
+      location.reload();
+    };
   </script>
 </body>
 </html>
