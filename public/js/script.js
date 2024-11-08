@@ -12,14 +12,16 @@ const peerConnection = new RTCPeerConnection({
 const socket = new WebSocket('wss://video-chat-bpgv.onrender.com');
 
 // Handle incoming WebSocket messages
-socket.onmessage = async ({ data }) => {
+socket.onmessage = async (event) => {
+  let data = event.data;
+
+  // Check if the data is a Blob, and convert it to text if needed
   if (data instanceof Blob) {
-    // Convert the Blob to text before parsing
-    data = await data.text();
+    data = await data.text(); // Convert Blob to a string
   }
 
   try {
-    const message = JSON.parse(data);
+    const message = JSON.parse(data); // Parse the string to JSON
     console.log('Parsed message:', message);
 
     // Handle the different message types
@@ -45,6 +47,7 @@ socket.onmessage = async ({ data }) => {
     console.error('Failed to parse message:', error);
   }
 };
+
 
 
 // Get local media (camera and microphone)
